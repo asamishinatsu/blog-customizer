@@ -11,23 +11,29 @@ import {
 import styles from './app.module.scss';
 
 export const App = () => {
-	const [formStyles, setFormStyles] = useState<CSSProperties>({});
+	const [articleState, setArticleState] =
+		useState<ArticleStateType>(defaultArticleState);
 
 	const handleStyleChange = (newData: ArticleStateType) => {
-		setFormStyles({
-			'--font-family': newData.fontFamilyOption.value,
-			'--font-size': newData.fontSizeOption.value,
-			'--font-color': newData.fontColor.value,
-			'--container-width': newData.contentWidth.value,
-			'--bg-color': newData.backgroundColor.value,
-		} as CSSProperties);
+		setArticleState(newData);
 	};
 
 	return (
-		<main className={clsx(styles.main)} style={formStyles}>
+		<main
+			className={clsx(styles.main)}
+			style={
+				{
+					'--font-family': articleState.fontFamilyOption.value,
+					'--font-size': articleState.fontSizeOption.value,
+					'--font-color': articleState.fontColor.value,
+					'--container-width': articleState.contentWidth.value,
+					'--bg-color': articleState.backgroundColor.value,
+				} as CSSProperties
+			}>
 			<ArticleParamsForm
 				onSubmit={handleStyleChange}
-				initialValue={defaultArticleState}
+				initialValue={articleState}
+				defaultValue={defaultArticleState}
 			/>
 			<Article />
 		</main>

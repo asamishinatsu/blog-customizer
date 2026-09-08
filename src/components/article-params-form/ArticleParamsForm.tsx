@@ -6,113 +6,106 @@ import { Separator } from 'src/ui/separator';
 import * as utils from 'src/constants/articleProps';
 
 import styles from './ArticleParamsForm.module.scss';
-import { useRef, useState } from 'react';
+import { FormEvent, useCallback, useRef, useState } from 'react';
 import { clsx } from 'clsx';
 import { useOutsideClickClose } from './hooks/useOutsideClickClose';
 
 export type ArticleFormProps = {
 	onSubmit: (data: utils.ArticleStateType) => void;
 	initialValue: utils.ArticleStateType;
+	defaultValue: utils.ArticleStateType;
 };
 
 export const ArticleParamsForm = (props: ArticleFormProps) => {
-	const [isActive, setActive] = useState(false);
+	const [isFormOpen, setIsFormOpen] = useState(false);
 	const rootRef = useRef<HTMLDivElement>(null);
 
-	const [articleState, setArticleState] = useState<utils.ArticleStateType>(
-		props.initialValue
-	);
+	const [draftArticleState, setDraftArticleState] =
+		useState<utils.ArticleStateType>(props.initialValue);
 
-	const updateArticleState = <K extends keyof utils.ArticleStateType>(
-		key: K,
-		value: utils.ArticleStateType[K]
-	) => {
-		setArticleState((oldState) => ({
-			...oldState,
-			[key]: value,
-		}));
-	};
+	const updateArticleState =
+		<K extends keyof utils.ArticleStateType>(key: K) =>
+		(value: utils.ArticleStateType[K]) => {
+			setDraftArticleState((oldState) => ({
+				...oldState,
+				[key]: value,
+			}));
+		};
 
 	const toggleForm = () => {
-		setActive((isOpen) => !isOpen);
+		setIsFormOpen((isOpen) => !isOpen);
 	};
 
+	const handleFormClose = useCallback(() => setIsFormOpen(false), []);
+
 	useOutsideClickClose({
-		isOpen: isActive,
+		isOpen: isFormOpen,
 		rootRef,
-		onClose: () => setActive(false),
+		onClose: handleFormClose,
 	});
 
-	const handleSubmit = () => {
-		props.onSubmit(articleState);
+	const handleSubmit = (e: FormEvent) => {
+		e.preventDefault();
+		props.onSubmit(draftArticleState);
 	};
 
 	const handleReset = () => {
-		setArticleState(props.initialValue);
-		props.onSubmit(props.initialValue);
+		setDraftArticleState(props.defaultValue);
+		props.onSubmit(props.defaultValue);
 	};
 
 	return (
 		<div ref={rootRef}>
-			<ArrowButton isOpen={isActive} onClick={toggleForm} />
+			<ArrowButton isOpen={isFormOpen} onClick={toggleForm} />
 			<aside
 				className={clsx(styles.container, {
-					[styles.container_open]: isActive,
+					[styles.container_open]: isFormOpen,
 				})}>
-				<form className={styles.form}>
+				<form
+					className={styles.form}
+					onReset={handleReset}
+					onSubmit={handleSubmit}>
 					<Select
-						selected={articleState.fontFamilyOption}
+						selected={draftArticleState.fontFamilyOption}
 						options={utils.fontFamilyOptions}
-						onChange={(option) =>
-							updateArticleState('fontFamilyOption', option)
-						}
+						onChange={updateArticleState('fontFamilyOption')}
 						title={'Шрифт'}
 					/>
 
 					<RadioGroup
 						name='font-size'
 						options={utils.fontSizeOptions}
-						selected={articleState.fontSizeOption}
-						onChange={(option) => updateArticleState('fontSizeOption', option)}
+						selected={draftArticleState.fontSizeOption}
+						onChange={updateArticleState('fontSizeOption')}
 						title={'Размер шрифта'}
 					/>
 
 					<Select
-						selected={articleState.fontColor}
+						selected={draftArticleState.fontColor}
 						options={utils.fontColors}
-						onChange={(option) => updateArticleState('fontColor', option)}
+						onChange={updateArticleState('fontColor')}
 						title={'Цвет шрифта'}
 					/>
 
 					<Separator />
 
 					<Select
-						selected={articleState.backgroundColor}
+						selected={draftArticleState.backgroundColor}
 						options={utils.backgroundColors}
-						onChange={(option) => updateArticleState('backgroundColor', option)}
+						onChange={updateArticleState('backgroundColor')}
 						title={'Цвет фона'}
 					/>
 
 					<Select
-						selected={articleState.contentWidth}
+						selected={draftArticleState.contentWidth}
 						options={utils.contentWidthArr}
-						onChange={(option) => updateArticleState('contentWidth', option)}
+						onChange={updateArticleState('contentWidth')}
 						title={'Ширина контента'}
 					/>
 
 					<div className={styles.bottomContainer}>
-						<Button
-							title='Сбросить'
-							htmlType='button'
-							type='clear'
-							onClick={handleReset}
-						/>
-						<Button
-							title='Применить'
-							htmlType='button'
-							type='apply'
-							onClick={handleSubmit}
-						/>
+						<Button title='Сбросить' htmlType='reset' type='clear' />
+						<Button title='Применить' htmlType='submit' type='apply' />
 					</div>
 				</form>
 			</aside>
